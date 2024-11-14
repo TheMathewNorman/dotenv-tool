@@ -1,0 +1,12 @@
+[package]
+name = "env-tool"
+version = "0.1.0"
+edition = "2021"
+authors = ["Mathew Norman <contact@mat.codes>"]
+license = "MIT OR Apache-2.0"
+description = "A tool for viewing and manipulating .env files."
+readme = "README.md"
+homepage = "https://github.com/themathewnorman/env-tool"
+repository = "https://github.com/themathewnorman/env-tool"
+keywords = ["cli", "env", "dotenv", "file-tools", "config-tools"]
+categories = ["command-line-utilities"]
