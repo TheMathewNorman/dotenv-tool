@@ -1,9 +1,8 @@
-#![allow(dead_code)]
-
+#![allow(unused_imports)]
 use std::env;
 use std::fs::{File, OpenOptions};
 use std::io::{BufRead, BufReader, Write};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 // Import console output styles and styling functions
 mod styles;
@@ -24,12 +23,14 @@ fn main() {
 
     // Match the first argument to determine the command.
     match args[1].as_str() {
-        "show" => {
+        "show" | "view" | "find" | "read" => {
             // Look for the --path flag and extract the path if provided.
             let dir = parse_path_argument(&args);
-            show_env_file(dir);
+            // Look for an optional key argument (e.g., env-tool show KEY_NAME --path /path)
+            let key = args.get(2).filter(|&arg| arg != "--path").map(|s| s.as_str());
+            show_env_file(dir, key);
         }
-        "config" => {
+        "set" | "config" | "update" | "edit" => {
             if args.len() < 3 {
                 eprintln!("Error: 'config' command requires a property name.");
                 print_help();
@@ -40,20 +41,16 @@ fn main() {
 
             // Determine if a value is provided
             let value = if args.contains(&"--path".to_string()) {
-                // Locate --path in the argument list to correctly identify the value position
                 let path_index = args.iter().position(|x| x == "--path").unwrap();
-
-                // A value exists if it is provided before `--path`
                 if path_index > 3 {
-                    Some(args[3].as_str()) // Value exists before `--path`
+                    Some(args[3].as_str())
                 } else {
-                    None // No value provided, prompt the user
+                    None
                 }
             } else {
-                args.get(3).map(|val| val.as_str()) // If no --path, use the fourth argument if available
+                args.get(3).map(|val| val.as_str())
             };
 
-            // Call `config_env_file` with the parsed directory and value
             config_env_file(dir, property, value);
         }
         "--help" | "-h" => {
@@ -81,39 +78,51 @@ fn parse_path_argument(args: &[String]) -> &str {
 
 /// Function to read and print the contents of a `.env` file in the given directory,
 /// separating each line into key-value pairs, while ignoring blank lines and comments.
-fn show_env_file(dir: &str) {
-    let env_path = Path::new(dir).join("../target/.env");
+/// Function to read and print the contents of a `.env` file in the given directory,
+/// showing all properties or only the specified key's value.
+fn show_env_file(dir: &str, key: Option<&str>) {
+    let env_path = Path::new(dir).join(".env");
 
-    if env_path.exists() && env_path.is_file() {
-        println!("{}Showing: {}{}", NOTE_STYLE, env_path.display(), RESET_STYLE);
-        match File::open(&env_path) {
-            Ok(file) => {
-                let reader = BufReader::new(file);
-                for (index, line) in reader.lines().enumerate() {
-                    match line {
-                        Ok(content) => {
-                            let trimmed = content.trim();
-                            // Skip blank lines and comments
-                            if trimmed.is_empty() || trimmed.starts_with('#') {
-                                continue;
-                            }
-                            // Split into key and value
-                            if let Some((key, value)) = parse_env_line(trimmed) {
-                                println!("{}{}{}: {}{}{}", KEY_STYLE, key, RESET_STYLE, VALUE_STYLE, value, RESET_STYLE);
-                            } else {
-                                eprintln!("Warning: Line {} is not in KEY=VALUE format.", index + 1);
-                            }
-                        }
-                        Err(error) => eprintln!("Error reading line {}: {}", index + 1, error),
-                    }
+    if !env_path.exists() || !env_path.is_file() {
+        eprintln!("No .env file found in the specified directory: {}", env_path.display());
+        return;
+    }
+
+    let file = File::open(&env_path).expect("Failed to open .env file");
+    let reader = BufReader::new(file);
+
+    let mut key_found = false;
+
+    for line in reader.lines() {
+        let line = line.expect("Failed to read line from .env file");
+        let trimmed = line.trim();
+
+        // Skip blank lines and comments
+        if trimmed.is_empty() || trimmed.starts_with('#') {
+            continue;
+        }
+
+        let env_path: PathBuf = Path::new(dir).join(".env");
+        let env_path_str = env_path.to_str().unwrap_or("[Invalid UTF-8 path]");
+        if let Some((line_key, line_value)) = parse_env_line(trimmed) {
+            if let Some(target_key) = key {
+                if line_key == target_key {
+                    println!("{}Showing from {}{}", NOTE_STYLE, style_italic(&env_path_str), RESET_STYLE);
+                    println!("{}: {}", style_key(&target_key), style_value(&line_value));
+                    key_found = true;
+                    break;
                 }
-            }
-            Err(error) => {
-                eprintln!("Error opening .env file: {}", error);
+            } else {
+                println!("{}{}{}: {}{}{}", KEY_STYLE, line_key, RESET_STYLE, VALUE_STYLE, line_value, RESET_STYLE);
             }
         }
-    } else {
-        println!("No .env file found in the specified directory: {}", env_path.display());
+    }
+
+    // If a specific key was requested but not found, inform the user.
+    if let Some(target_key) = key {
+        if !key_found {
+            eprintln!("Key '{}' not found in .env file.", target_key);
+        }
     }
 }
 
@@ -224,31 +233,30 @@ fn parse_env_line(line: &str) -> Option<(String, String)> {
 /// Function to display help information.
 fn print_help() {
     println!(
-        "env-tool: A simple tool to manage .env files.\n\n\
+        "env-tool: A tool to view and modify .env files from the terminal.\n\n\
         USAGE:\n\
         \tenv-tool <COMMAND> [OPTIONS] [ARGS]\n\n\
         COMMANDS:\n\
-        \tshow [--path <directory>]\n\
-        \t\tShow the contents of the .env file in the specified directory (or current directory if none specified).\n\
-        \t\tExample: env-tool show --path /path/to/dir\n\n\
-        \tconfig <KEY> [VALUE] [--path <directory>]\n\
-        \t\tSet or update a property in the .env file. If VALUE is not provided, you will be prompted to enter a new value interactively.\n\
-        \t\tIf a value is provided with single or double quotes, it will be saved with the quotes preserved.\n\
-        \t\tIf prompted interactively, the value will be saved in double quotes by default.\n\
-        \t\tOptions:\n\
-        \t\t\tKEY\t\tThe name of the property to add or update.\n\
-        \t\t\tVALUE\t\t(Optional) The value to set for the specified KEY.\n\
-        \t\t\t--path\t\t(Optional) Specify the path to the directory containing the .env file.\n\
+        \tshow [KEY] [--path <directory>]\n\
+        \t\tDisplay the contents of the .env file, or only the specified KEY's value if provided.\n\
+        \t\tThe --path option can specify the directory containing the .env file.\n\
         \t\tExamples:\n\
-        \t\t\tenv-tool config TEST_KEY \"some value\" --path /path/to/dir\n\
-        \t\t\tenv-tool config TEST_KEY --path /path/to/dir\n\n\
+        \t\t\tenv-tool show\n\
+        \t\t\tenv-tool show DB_NAME --path /path/to/dir\n\n\
+        \tset <KEY> [VALUE] [--path <directory>]\n\
+        \t\tSet or update a property in the .env file. If VALUE is omitted, you will be prompted to enter it interactively.\n\
+        \t\tValues wrapped in single or double quotes will retain those quotes. If prompted, the value will be saved in double quotes by default.\n\
+        \t\tAliases for 'set' include 'config' and 'update'.\n\
+        \t\tExamples:\n\
+        \t\t\tenv-tool set DB_USER my_user --path /path/to/dir\n\
+        \t\t\tenv-tool set API_KEY --path /path/to/.env\n\
+        \t\t\tenv-tool config MY_KEY \"quoted value\"\n\n\
         OPTIONS:\n\
         \t--help, -h\tPrints help information.\n\n\
         EXAMPLES:\n\
         \tenv-tool show\n\
-        \tenv-tool show --path ./some/directory\n\
-        \tenv-tool config SOME_KEY some_value\n\
-        \tenv-tool config SOME_KEY \"quoted value\"\n\
-        \tenv-tool config ANOTHER_KEY --path /specific/directory\n"
+        \tenv-tool show SOME_KEY\n\
+        \tenv-tool set NEW_KEY \"new_value\"\n\
+        \tenv-tool set ANOTHER_KEY --path ./specific/dir\n"
     );
 }
