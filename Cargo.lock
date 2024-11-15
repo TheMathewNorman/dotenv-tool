@@ -3,5 +3,5 @@
 version = 3
 
 [[package]]
-name = "env-tool"
+name = "dotenv-tool"
 version = "0.1.0"

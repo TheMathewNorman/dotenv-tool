@@ -1,6 +1,6 @@
-# env-tool
+# dotenv-tool
 
-`env-tool` is a command-line utility for managing and configuring `.env` files. It provides a convenient way to view, add, and update environment variables in `.env` files, with support for specifying file paths and handling values interactively.
+`dotenv-tool` is a command-line utility for managing and configuring `.env` files. It provides a convenient way to view, add, and update environment variables in `.env` files, with support for specifying file paths and handling values interactively.
 
 ## Features
 
@@ -14,7 +14,7 @@
 1. **Clone the repository**:
    ```bash
    git clone <repository-url>
-   cd env-tool
+   cd dotenv-tool
    ```
 2. **Build the tool**:
    ```bash
@@ -22,12 +22,12 @@
    ```
 3. **Install the binary**:
    ```bash
-   sudo mv target/release/env-tool /usr/local/bin/
+   sudo mv target/release/dotenv-tool /usr/local/bin/
    ```
    
 ## Usage
 ```bash
-env-tool <COMMAND> [OPTIONS] [ARGS]
+dotenv-tool <COMMAND> [OPTIONS] [ARGS]
 ```
 
 ### Commands
@@ -41,8 +41,8 @@ Display the contents of the .env file, or show only the value of the specified K
 - If no path is specified, the current directory is used by default.
 
 Examples:
-  - `env-tool show`
-  - `env-tool show DB_NAME --path /path/to/dir`
+  - `dotenv-tool show`
+  - `dotenv-tool show DB_NAME --path /path/to/dir`
 
 
 ```
@@ -56,9 +56,9 @@ Set or update a property in the .env file. If VALUE is omitted, you will be prom
 - Aliases: config, update
 
 Examples:
-  - `env-tool set DB_USER my_user --path /path/to/dir`
-  - `env-tool set API_KEY --path /path/to/.env`
-  - `env-tool config MY_KEY "quoted value"`
+  - `dotenv-tool set DB_USER my_user --path /path/to/dir`
+  - `dotenv-tool set API_KEY --path /path/to/.env`
+  - `dotenv-tool config MY_KEY "quoted value"`
 
 ### Options
 `--path <directory>` - specify the directory containing the .env file. If not provided, the current directory is used by default.
@@ -68,17 +68,17 @@ Examples:
 ## Examples
 ```bash
 #Show all variables in the .env file
-env-tool show
+dotenv-tool show
 
 # Show a specific variable’s value
-env-tool show SOME_KEY
+dotenv-tool show SOME_KEY
 
 # Set a new key with a value
-env-tool set NEW_KEY "new_value"
+dotenv-tool set NEW_KEY "new_value"
 
 # Set or update a key, specifying a custom directory for .env
-env-tool set ANOTHER_KEY --path ./specific/dir
+dotenv-tool set ANOTHER_KEY --path ./specific/dir
 
 # Use the ‘config’ alias to set a key with a quoted value
-env-tool config MY_KEY 'quoted value'
+dotenv-tool config MY_KEY 'quoted value'
 ```

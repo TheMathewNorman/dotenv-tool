@@ -26,7 +26,7 @@ fn main() {
         "show" | "view" | "find" | "read" => {
             // Look for the --path flag and extract the path if provided.
             let dir = parse_path_argument(&args);
-            // Look for an optional key argument (e.g., env-tool show KEY_NAME --path /path)
+            // Look for an optional key argument (e.g., dotenv-tool show KEY_NAME --path /path)
             let key = args.get(2).filter(|&arg| arg != "--path").map(|s| s.as_str());
             show_env_file(dir, key);
         }
@@ -233,30 +233,30 @@ fn parse_env_line(line: &str) -> Option<(String, String)> {
 /// Function to display help information.
 fn print_help() {
     println!(
-        "env-tool: A tool to view and modify .env files from the terminal.\n\n\
+        "dotenv-tool: A tool to view and modify .env files from the terminal.\n\n\
         USAGE:\n\
-        \tenv-tool <COMMAND> [OPTIONS] [ARGS]\n\n\
+        \tdotenv-tool <COMMAND> [OPTIONS] [ARGS]\n\n\
         COMMANDS:\n\
         \tshow [KEY] [--path <directory>]\n\
         \t\tDisplay the contents of the .env file, or only the specified KEY's value if provided.\n\
         \t\tThe --path option can specify the directory containing the .env file.\n\
         \t\tExamples:\n\
-        \t\t\tenv-tool show\n\
-        \t\t\tenv-tool show DB_NAME --path /path/to/dir\n\n\
+        \t\t\tdotenv-tool show\n\
+        \t\t\tdotenv-tool show DB_NAME --path /path/to/dir\n\n\
         \tset <KEY> [VALUE] [--path <directory>]\n\
         \t\tSet or update a property in the .env file. If VALUE is omitted, you will be prompted to enter it interactively.\n\
         \t\tValues wrapped in single or double quotes will retain those quotes. If prompted, the value will be saved in double quotes by default.\n\
         \t\tAliases for 'set' include 'config' and 'update'.\n\
         \t\tExamples:\n\
-        \t\t\tenv-tool set DB_USER my_user --path /path/to/dir\n\
-        \t\t\tenv-tool set API_KEY --path /path/to/.env\n\
-        \t\t\tenv-tool config MY_KEY \"quoted value\"\n\n\
+        \t\t\tdotenv-tool set DB_USER my_user --path /path/to/dir\n\
+        \t\t\tdotenv-tool set API_KEY --path /path/to/.env\n\
+        \t\t\tdotenv-tool config MY_KEY \"quoted value\"\n\n\
         OPTIONS:\n\
         \t--help, -h\tPrints help information.\n\n\
         EXAMPLES:\n\
-        \tenv-tool show\n\
-        \tenv-tool show SOME_KEY\n\
-        \tenv-tool set NEW_KEY \"new_value\"\n\
-        \tenv-tool set ANOTHER_KEY --path ./specific/dir\n"
+        \tdotenv-tool show\n\
+        \tdotenv-tool show SOME_KEY\n\
+        \tdotenv-tool set NEW_KEY \"new_value\"\n\
+        \tdotenv-tool set ANOTHER_KEY --path ./specific/dir\n"
     );
 }
