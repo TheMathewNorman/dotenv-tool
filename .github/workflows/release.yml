@@ -20,7 +20,7 @@ jobs:
     - name: Upload binary to release
       uses: softprops/action-gh-release@v1
       with:
-        files: target/release/env-tool
+        files: target/release/dotenv-tool
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   
