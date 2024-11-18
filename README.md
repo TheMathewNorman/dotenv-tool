@@ -1,3 +1,5 @@
+# dotenv-tool
+
 `dotenv-tool` is a command-line utility for managing and configuring `.env` files. It provides a convenient way to view, add, and update environment variables in `.env` files, with support for specifying file paths and handling values interactively
 
 ## Features
